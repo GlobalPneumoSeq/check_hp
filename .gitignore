@@ -1,0 +1,9 @@
+# macOS System files
+.DS_Store
+
+# Test files
+*.gff3
+*.fna
+*.gbk
+*.fai
+*.fasta
