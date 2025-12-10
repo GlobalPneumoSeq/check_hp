@@ -1,0 +1,8 @@
+name: homopolymer
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - gffutils
+  - natsort
+  - pyfaidx
