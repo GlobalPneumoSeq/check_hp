@@ -21,28 +21,20 @@ def main(gff_path, promoter_length, repeats):
         counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
 
         for contig in natsort.natsorted(db.seqids()):
-            contig_fasta = fasta[contig]
-            contig_start, contig_end, cds_features = get_contig_details(db, contig, len(contig_fasta))
+            contig_details = get_contig_details(db, contig, fasta, featuretype="CDS")
 
-            for i, feature in enumerate(cds_features):
-                upstream_feature, downstream_feature = get_adjacent_features(i, cds_features)
-                upstream_end = upstream_feature.end if upstream_feature else contig_start
-                downstream_start = downstream_feature.start if downstream_feature else contig_end
-
-                if feature.strand == "+":
-                    gap = feature.start - upstream_end
-                elif feature.strand == "-":
-                    gap = downstream_start - feature.end
-                else:
-                    raise ValueError("Malformatted GFF file with strand value neither + or -")
+            for i, feature in enumerate(contig_details["features"]):
+                adjacent_features = get_adjacent_features(i, contig_details)
+                gap = get_gap(feature, adjacent_features)
 
                 if gap > promoter_length:
                     counter["promoter"] += 1
                     for base in bases:
-                        counter[f"poly{base}"] += get_homopolymer_count(feature, contig_fasta, feature.strand, promoter_length, base, repeats)
+                        counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], feature.strand, promoter_length, base, repeats)
        
         print(counter)
 
+    # Always clean up temporary files
     finally:
         for file in (db_path, fasta_path, f"{fasta_path}.fai"):
             if os.path.isfile(file):
@@ -63,29 +55,58 @@ def extract_fasta(gff_path, fasta_path):
     return pyfaidx.Fasta(fasta_path)
 
 
-# Extract details regarding the contig
-def get_contig_details(db, contig, contig_fasta_length):
+# Extract contig details
+def get_contig_details(db, contig, fasta, featuretype):
+    contig_fasta = fasta[contig]
+
     try:
         contig_start = db[contig].start
         contig_end = db[contig].end
     except gffutils.exceptions.FeatureNotFoundError:
         contig_start = 1
-        contig_end = contig_fasta_length
+        contig_end = len(contig_fasta)
     
-    cds_features = [feature for feature in db.region(seqid=contig, featuretype="CDS")]
+    cds_features = [feature for feature in db.region(seqid=contig, featuretype=featuretype)]
     
-    return contig_start, contig_end, cds_features
+    return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": cds_features}
 
 
 # Get upstream and downstream features if possible else returns None
-def get_adjacent_features(i, features):
+def get_adjacent_features(cur_feature_index, contig_details):
+    features = contig_details["features"]
+
     features_count = len(features)
-    upstream_feature = features[i - 1] if i > 0 else None
-    downstream_feature = features[i + 1] if i + 1 < features_count else None
 
-    return upstream_feature, downstream_feature
+    if cur_feature_index > 0:
+        upstream_feature = features[cur_feature_index - 1]
+        upstream_end = upstream_feature.end
+    else:
+        upstream_feature = None
+        upstream_end = contig_details["start"]
+
+    if cur_feature_index + 1 < features_count: 
+        downstream_feature = features[cur_feature_index + 1]
+        downstream_start = downstream_feature.start
+    else:
+        downstream_feature = None
+        downstream_start = contig_details["end"]
+
+    return {"upstream_feature": upstream_feature, "upstream_end": upstream_end, "downstream_feature": downstream_feature, "downstream_start": downstream_start}
 
 
+# Get gap size between current feature and the relevant adjacnet feature
+def get_gap(feature, adjacent_features):
+    if feature.strand == "+":
+        gap = feature.start - adjacent_features["upstream_end"]
+    elif feature.strand == "-":
+        gap = adjacent_features["downstream_start"] - feature.end
+    else:
+        raise ValueError("Malformatted GFF file with strand value neither + or -")
+    
+    return gap
+
+
+# Get the homopolymer count of the specific base within the promoter
 def get_homopolymer_count(feature, contig_fasta, strand, promoter_length, base, repeats):
     match_pattern = re.compile(rf"{base}{{{repeats},}}")
     if strand == "+":
