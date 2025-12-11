@@ -21,8 +21,8 @@ def main(gff_path, promoter_length, repeats):
         counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
 
         for contig in natsort.natsorted(db.seqids()):
-            contig_start, contig_end, cds_features = get_contig_details(db, contig)
             contig_fasta = fasta[contig]
+            contig_start, contig_end, cds_features = get_contig_details(db, contig, len(contig_fasta))
 
             for i, feature in enumerate(cds_features):
                 upstream_feature, downstream_feature = get_adjacent_features(i, cds_features)
@@ -64,9 +64,14 @@ def extract_fasta(gff_path, fasta_path):
 
 
 # Extract details regarding the contig
-def get_contig_details(db, contig):
-    contig_start = db[contig].start
-    contig_end = db[contig].end
+def get_contig_details(db, contig, contig_fasta_length):
+    try:
+        contig_start = db[contig].start
+        contig_end = db[contig].end
+    except gffutils.exceptions.FeatureNotFoundError:
+        contig_start = 1
+        contig_end = contig_fasta_length
+    
     cds_features = [feature for feature in db.region(seqid=contig, featuretype="CDS")]
     
     return contig_start, contig_end, cds_features
