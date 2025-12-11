@@ -7,3 +7,6 @@
 *.gbk
 *.fai
 *.fasta
+
+# Temporary directory for development
+dev_temp
