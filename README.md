@@ -1,1 +1,1 @@
-# Check Homopolymer
+# Check HP (Homopolymer)
