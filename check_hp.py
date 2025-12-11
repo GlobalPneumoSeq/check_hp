@@ -27,7 +27,7 @@ def main(gff_path, promoter_length, repeats):
                 adjacent_features = get_adjacent_features(i, contig_details)
                 gap = get_gap(feature, adjacent_features)
 
-                if gap > promoter_length:
+                if gap >= promoter_length:
                     counter["promoter"] += 1
                     for base in bases:
                         counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], feature.strand, promoter_length, base, repeats)
@@ -94,12 +94,12 @@ def get_adjacent_features(cur_feature_index, contig_details):
     return {"upstream_feature": upstream_feature, "upstream_end": upstream_end, "downstream_feature": downstream_feature, "downstream_start": downstream_start}
 
 
-# Get gap size between current feature and the relevant adjacnet feature
+# Get gap size between current feature and the relevant adjacent feature
 def get_gap(feature, adjacent_features):
     if feature.strand == "+":
-        gap = feature.start - adjacent_features["upstream_end"]
+        gap = feature.start - adjacent_features["upstream_end"] - 1
     elif feature.strand == "-":
-        gap = adjacent_features["downstream_start"] - feature.end
+        gap = adjacent_features["downstream_start"] - feature.end - 1
     else:
         raise ValueError("Malformatted GFF file with strand value neither + or -")
     
