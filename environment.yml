@@ -1,4 +1,4 @@
-name: homopolymer
+name: check_hp
 channels:
   - conda-forge
   - bioconda
