@@ -1,6 +1,9 @@
 # macOS System files
 .DS_Store
 
+# Python cache
+__pycache__
+
 # Test files
 *.gff3
 *.gff
