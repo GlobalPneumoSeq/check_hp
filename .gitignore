@@ -3,6 +3,7 @@
 
 # Test files
 *.gff3
+*.gff
 *.fna
 *.gbk
 *.fai
