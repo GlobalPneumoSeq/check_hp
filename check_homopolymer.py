@@ -119,11 +119,15 @@ def get_homopolymer_count(feature, contig_fasta, strand, promoter_length, base, 
 
 # Parse arguments
 def parse_arguments():
-    def check_file_exist(file_path):
-        if os.path.isfile(file_path):
-            return file_path
-        else:
-            raise argparse.ArgumentTypeError(f'{file_path} does not exist.')
+    def check_valid_gff3(gff_path):
+        if not os.path.isfile(gff_path):
+            raise argparse.ArgumentTypeError(f'{gff_path} does not exist.')
+        
+        with open(gff_path, "r") as gff_file:
+            if gff_file.readline().strip() != "##gff-version 3":
+                raise argparse.ArgumentTypeError(f'{gff_path} is not a valid GFF3 file.')
+            
+        return gff_path
 
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
@@ -133,7 +137,7 @@ def parse_arguments():
 
     parser.add_argument(
         'gff',
-        type=check_file_exist,
+        type=check_valid_gff3,
         help='path to a GFF3 file',
     )
 
