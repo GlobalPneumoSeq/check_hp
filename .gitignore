@@ -4,6 +4,9 @@
 # Python cache
 __pycache__
 
+# pytest files
+.coverage
+
 # Test files
 *.gff3
 *.gff
