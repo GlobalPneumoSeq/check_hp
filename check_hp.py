@@ -25,12 +25,13 @@ def main(gff_path, promoter_length, repeats):
 
             for i, feature in enumerate(contig_details["features"]):
                 adjacent_features = get_adjacent_features(i, contig_details)
-                gap = get_gap(feature, adjacent_features)
-
-                if gap >= promoter_length:
-                    counter["promoter"] += 1
-                    for base in bases:
-                        counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], feature.strand, promoter_length, base, repeats)
+                
+                if not has_promoter(feature, adjacent_features, promoter_length):
+                    continue
+                
+                counter["promoter"] += 1
+                for base in bases:
+                    counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
        
         print(counter)
 
@@ -94,7 +95,7 @@ def get_adjacent_features(cur_feature_index, contig_details):
     return {"upstream_feature": upstream_feature, "upstream_end": upstream_end, "downstream_feature": downstream_feature, "downstream_start": downstream_start}
 
 
-# Get gap size between current feature and the relevant adjacent feature
+# Get gap size between current feature and the relevant adjacent feature 
 def get_gap(feature, adjacent_features):
     if feature.strand == "+":
         gap = feature.start - adjacent_features["upstream_end"] - 1
@@ -106,13 +107,21 @@ def get_gap(feature, adjacent_features):
     return gap
 
 
+# Check if gap size between current feature and the relevant adjacent feature is larger than promoter_length
+def has_promoter(feature, adjacent_features, promoter_length):
+    gap = get_gap(feature, adjacent_features)
+    return gap >= promoter_length
+
+
 # Get the homopolymer count of the specific base within the promoter
-def get_homopolymer_count(feature, contig_fasta, strand, promoter_length, base, repeats):
+def get_homopolymer_count(feature, contig_fasta, promoter_length, base, repeats):
     match_pattern = re.compile(rf"{base}{{{repeats},}}")
-    if strand == "+":
+    if feature.strand == "+":
         promoter_sequence = contig_fasta[(feature.start - promoter_length - 1) : (feature.start - 1)]
-    elif strand == "-":
+    elif feature.strand == "-":
         promoter_sequence = contig_fasta[feature.end : (feature.end + promoter_length)].reverse.complement
+    else:
+        raise ValueError("Malformatted GFF file with strand value neither + or -")
     
     return len(match_pattern.findall(str(promoter_sequence)))
 
