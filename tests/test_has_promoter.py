@@ -1,7 +1,5 @@
 from check_hp import has_promoter
 
-import pytest
-
 class MockFeature:
     def __init__(self, start, end, strand):
         self.start = start
