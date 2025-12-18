@@ -83,14 +83,14 @@ def get_adjacent_features(cur_feature_index, contig_details):
         upstream_end = upstream_feature.end
     else:
         upstream_feature = None
-        upstream_end = contig_details["start"]
+        upstream_end = contig_details["start"] - 1
 
     if cur_feature_index + 1 < features_count: 
         downstream_feature = features[cur_feature_index + 1]
         downstream_start = downstream_feature.start
     else:
         downstream_feature = None
-        downstream_start = contig_details["end"]
+        downstream_start = contig_details["end"] + 1
 
     return {"upstream_feature": upstream_feature, "upstream_end": upstream_end, "downstream_feature": downstream_feature, "downstream_start": downstream_start}
 
