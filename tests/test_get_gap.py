@@ -46,5 +46,5 @@ def test_get_gap_minus_strand_no_gap():
 def test_get_gap_invalid_strand():
     feature = MockFeature(start=100, end=150, strand="x")
     adjacent_features = {"upstream_end": 50, "downstream_start": 200}
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Malformatted GFF file with strand value neither \+ or -"):
         get_gap(feature, adjacent_features)
