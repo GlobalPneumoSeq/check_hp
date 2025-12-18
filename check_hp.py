@@ -67,7 +67,7 @@ def get_contig_details(db, contig, fasta, featuretype):
         contig_start = 1
         contig_end = len(contig_fasta)
     
-    features = [feature for feature in db.region(seqid=contig, featuretype=featuretype)]
+    features = list(db.region(seqid=contig, featuretype=featuretype))
     
     return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": features}
 
