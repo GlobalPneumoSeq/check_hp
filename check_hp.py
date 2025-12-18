@@ -10,8 +10,8 @@ import pyfaidx
 
 
 def main(gff_path, promoter_length, repeats):
-    fasta_path = Path(gff_path).with_suffix(".fasta")
-    db_path = f"{gff_path}_db"
+    fasta_path = str(Path(gff_path).with_suffix(".fasta"))
+    db_path = str(Path(gff_path).with_suffix(".gffutils_db"))
 
     try:
         fasta = extract_fasta(gff_path, fasta_path)
