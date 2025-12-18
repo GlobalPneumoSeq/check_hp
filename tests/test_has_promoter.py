@@ -1,10 +1,15 @@
 from check_hp import has_promoter
 
+
+# Mock Classes
+
 class MockFeature:
     def __init__(self, start, end, strand):
         self.start = start
         self.end = end
         self.strand = strand
+
+# Test
 
 def test_has_promoter_plus_strand_positive_100bp():
     feature = MockFeature(start=201, end=300, strand="+")

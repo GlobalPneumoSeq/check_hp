@@ -1,12 +1,17 @@
 from check_hp import get_gap
-
 import pytest
+
+
+# Mock Classes
 
 class MockFeature:
     def __init__(self, start, end, strand):
         self.start = start
         self.end = end
         self.strand = strand
+
+
+# Tests 
 
 def test_get_gap_plus_strand_positive_gap():
     feature = MockFeature(start=201, end=300, strand="+")
