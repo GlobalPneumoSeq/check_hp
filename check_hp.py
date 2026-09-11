@@ -7,15 +7,17 @@ import re
 import natsort
 import gffutils
 import pyfaidx
+import tempfile
 
 
 def main(gff_path, promoter_length, repeats):
-    fasta_path = str(Path(gff_path).with_suffix(".fasta"))
-    db_path = str(Path(gff_path).with_suffix(".gffutils_db"))
 
-    try:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fasta_path = str(Path(tmpdir) / "tmp.fasta")
+        db_path = str(Path(tmpdir) / "tmp.gffutils_db")
+
         fasta = extract_fasta(gff_path, fasta_path)
-        db = gffutils.create_db(gff_path, db_path, force=True)
+        db = gffutils.create_db(gff_path, db_path)
 
         bases = ("A", "T", "C", "G")
         counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
@@ -34,12 +36,6 @@ def main(gff_path, promoter_length, repeats):
                     counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
        
         print(counter)
-
-    # Always clean up temporary files
-    finally:
-        for file in (db_path, fasta_path, f"{fasta_path}.fai"):
-            if os.path.isfile(file):
-                os.remove(file)
 
 
 # Extract FASTA from GFF3
