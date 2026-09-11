@@ -11,7 +11,6 @@ import tempfile
 
 
 def main(gff_path, promoter_length, repeats):
-
     with tempfile.TemporaryDirectory() as tmpdir:
         fasta_path = str(Path(tmpdir) / "tmp.fasta")
         db_path = str(Path(tmpdir) / "tmp.gffutils_db")
