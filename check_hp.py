@@ -118,7 +118,7 @@ def get_homopolymer_count(feature, contig_fasta, promoter_length, base, repeats)
     else:
         raise ValueError("Malformatted GFF file with strand value neither + or -")
     
-    return len(match_pattern.findall(str(promoter_sequence)))
+    return len(match_pattern.findall(str(promoter_sequence).upper()))
 
 
 # Parse arguments
