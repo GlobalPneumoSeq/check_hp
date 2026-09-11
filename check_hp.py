@@ -133,6 +133,15 @@ def parse_arguments():
             
         return gff_path
 
+    def check_int_more_than_one(val):
+        try:
+            val_int = int(val)
+            if val_int <= 1:
+                raise argparse.ArgumentTypeError(f'{val} is not a valid integer greater than 1.')
+            return val_int
+        except ValueError:
+            raise argparse.ArgumentTypeError(f'{val} is not a valid integer.')
+
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
         description='',
@@ -148,14 +157,14 @@ def parse_arguments():
     parser.add_argument(
         '-l', '--length',
         default=100,
-        type=int,
+        type=check_int_more_than_one,
         help='length of promoter region',
     )
 
     parser.add_argument(
         '-r', '--repeats',
         default=8,
-        type=int,
+        type=check_int_more_than_one,
         help='minimum repeats of the homopolymer',
     )
 
