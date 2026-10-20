@@ -6,3 +6,4 @@ dependencies:
   - gffutils
   - natsort
   - pyfaidx
+  - intervaltree

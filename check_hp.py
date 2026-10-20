@@ -8,6 +8,7 @@ import natsort
 import gffutils
 import pyfaidx
 import tempfile
+from intervaltree import IntervalTree
 
 
 def main(gff_path, promoter_length, repeats):
@@ -24,12 +25,17 @@ def main(gff_path, promoter_length, repeats):
         for contig in natsort.natsorted(db.seqids()):
             contig_details = get_contig_details(db, contig, fasta, featuretype="CDS")
 
-            for i, feature in enumerate(contig_details["features"]):
-                adjacent_features = get_adjacent_features(i, contig_details)
-                
-                if not has_promoter(feature, adjacent_features, promoter_length):
+            # Create an interval tree for the features in the contig
+            # feature.end + 1 as IntervalTree is non-inclusive of the upper limit
+            features_intervals = IntervalTree.from_tuples([(feature.start, feature.end + 1) for feature in contig_details["features"]])
+
+            for feature in contig_details["features"]:                
+                if promoter_feature_overlapped(feature, features_intervals, promoter_length):
                     continue
-                
+
+                if not promoter_within_contig(feature, contig_details, promoter_length):
+                    continue
+
                 counter["promoter"] += 1
                 for base in bases:
                     counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
@@ -67,45 +73,29 @@ def get_contig_details(db, contig, fasta, featuretype):
     return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": features}
 
 
-# Get upstream and downstream features if possible else returns None
-def get_adjacent_features(cur_feature_index, contig_details):
-    features = contig_details["features"]
-
-    features_count = len(features)
-
-    if cur_feature_index > 0:
-        upstream_feature = features[cur_feature_index - 1]
-        upstream_end = upstream_feature.end
-    else:
-        upstream_feature = None
-        upstream_end = contig_details["start"] - 1
-
-    if cur_feature_index + 1 < features_count: 
-        downstream_feature = features[cur_feature_index + 1]
-        downstream_start = downstream_feature.start
-    else:
-        downstream_feature = None
-        downstream_start = contig_details["end"] + 1
-
-    return {"upstream_feature": upstream_feature, "upstream_end": upstream_end, "downstream_feature": downstream_feature, "downstream_start": downstream_start}
-
-
-# Get gap size between current feature and the relevant adjacent feature 
-def get_gap(feature, adjacent_features):
+# Check if the promoter region overlaps with any features
+def promoter_feature_overlapped(feature, features_intervals, promoter_length):
     if feature.strand == "+":
-        gap = feature.start - adjacent_features["upstream_end"] - 1
+        promoter_start = feature.start - promoter_length
+        promoter_end = feature.start - 1
     elif feature.strand == "-":
-        gap = adjacent_features["downstream_start"] - feature.end - 1
+        promoter_start = feature.end + 1
+        promoter_end = feature.end + promoter_length
     else:
         raise ValueError("Malformatted GFF file with strand value neither + or -")
-    
-    return gap
+
+    # promoter_end + 1 as IntervalTree is non-inclusive of the upper limit
+    return len(features_intervals[promoter_start:promoter_end + 1]) > 0
 
 
-# Check if gap size between current feature and the relevant adjacent feature is larger than promoter_length
-def has_promoter(feature, adjacent_features, promoter_length):
-    gap = get_gap(feature, adjacent_features)
-    return gap >= promoter_length
+# Check if the promoter region within the contig boundaries
+def promoter_within_contig(feature, contig_details, promoter_length):
+    if feature.strand == "+":
+        return feature.start - promoter_length >= contig_details["start"]
+    elif feature.strand == "-":
+        return feature.end + promoter_length <= contig_details["end"]
+    else:
+        raise ValueError("Malformatted GFF file with strand value neither + or -")
 
 
 # Get the homopolymer count of the specific base within the promoter
