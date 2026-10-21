@@ -1,6 +1,8 @@
-from check_hp import get_contig_details
 import gffutils
 from types import SimpleNamespace
+
+from check_hp import get_contig_details
+
 
 # Mock Classes
 

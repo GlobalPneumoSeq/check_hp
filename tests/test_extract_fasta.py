@@ -1,6 +1,10 @@
-from check_hp import extract_fasta
 import pyfaidx
 import pytest
+
+from check_hp import extract_fasta
+
+
+# Tests
 
 def test_extract_fasta_typical(tmp_path):
     gff_path = tmp_path / "test.gff"
