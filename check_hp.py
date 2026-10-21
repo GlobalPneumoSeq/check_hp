@@ -30,6 +30,8 @@ def main(gff_path, promoter_length, repeats):
             features_intervals = IntervalTree.from_tuples([(feature.start, feature.end + 1) for feature in contig_details["features"]])
 
             for feature in contig_details["features"]:
+                validate_feature_strand(feature, contig)
+
                 if promoter_feature_overlapped(feature, features_intervals, promoter_length):
                     continue
 
@@ -73,6 +75,12 @@ def get_contig_details(db, contig, fasta, featuretype):
     return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": features}
 
 
+# Validate value of strand of a feature
+def validate_feature_strand(feature, contig):
+    if feature.strand not in ("+", "-"):
+        raise ValueError(f"Malformed GFF3: expected strand value of + or -, got {feature.strand} for feature {feature.id} on contig {contig}")
+
+
 # Check if the promoter region overlaps with any features
 def promoter_feature_overlapped(feature, features_intervals, promoter_length):
     if feature.strand == "+":
@@ -81,9 +89,6 @@ def promoter_feature_overlapped(feature, features_intervals, promoter_length):
     elif feature.strand == "-":
         promoter_start = feature.end + 1
         promoter_end = feature.end + promoter_length
-    else:
-        raise ValueError("Malformatted GFF file with strand value neither + or -")
-
     # promoter_end + 1 as IntervalTree is non-inclusive of the upper limit
     return len(features_intervals[promoter_start:promoter_end + 1]) > 0
 
@@ -94,8 +99,6 @@ def promoter_within_contig(feature, contig_details, promoter_length):
         return feature.start - promoter_length >= contig_details["start"]
     elif feature.strand == "-":
         return feature.end + promoter_length <= contig_details["end"]
-    else:
-        raise ValueError("Malformatted GFF file with strand value neither + or -")
 
 
 # Get the homopolymer count of the specific base within the promoter
@@ -105,9 +108,6 @@ def get_homopolymer_count(feature, contig_fasta, promoter_length, base, repeats)
         promoter_sequence = contig_fasta[(feature.start - promoter_length - 1) : (feature.start - 1)]
     elif feature.strand == "-":
         promoter_sequence = contig_fasta[feature.end : (feature.end + promoter_length)].reverse.complement
-    else:
-        raise ValueError("Malformatted GFF file with strand value neither + or -")
-    
     return len(match_pattern.findall(str(promoter_sequence).upper()))
 
 

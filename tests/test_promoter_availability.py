@@ -1,16 +1,17 @@
 from intervaltree import IntervalTree
 import pytest
 
-from check_hp import promoter_feature_overlapped, promoter_within_contig
+from check_hp import promoter_feature_overlapped, promoter_within_contig, validate_feature_strand
 
 
 # Mock Classes
 
 class MockFeature:
-    def __init__(self, start, end, strand):
+    def __init__(self, start, end, strand, feature_id="mock_id"):
         self.start = start
         self.end = end
         self.strand = strand
+        self.id = feature_id
 
 
 def make_features_intervals(*features):
@@ -70,3 +71,14 @@ def test_promoter_feature_overlapped(testing_feature, blocking_feature, expected
 )
 def test_promoter_within_contig(feature, contig_details, expected):
     assert promoter_within_contig(feature, contig_details, promoter_length=100) is expected
+
+
+@pytest.mark.parametrize("strand", ["+", "-"])
+def test_validate_feature_strand_accepts_valid_strands(strand):
+    validate_feature_strand(MockFeature(10, 20, strand), "contig_1")
+
+
+def test_validate_feature_strand_reports_feature_and_contig():
+    feature = MockFeature(10, 20, ".", feature_id="test_id")
+    with pytest.raises(ValueError, match=r"Malformed GFF3: expected strand value of \+ or -, got \. for feature test_id on contig contig_1"):
+        validate_feature_strand(feature, "contig_1")
