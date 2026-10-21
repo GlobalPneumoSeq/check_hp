@@ -7,3 +7,5 @@ dependencies:
   - natsort
   - pyfaidx
   - intervaltree
+  - pytest
+  - coverage
