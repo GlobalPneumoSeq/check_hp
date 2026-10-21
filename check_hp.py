@@ -29,7 +29,7 @@ def main(gff_path, promoter_length, repeats):
             # feature.end + 1 as IntervalTree is non-inclusive of the upper limit
             features_intervals = IntervalTree.from_tuples([(feature.start, feature.end + 1) for feature in contig_details["features"]])
 
-            for feature in contig_details["features"]:                
+            for feature in contig_details["features"]:
                 if promoter_feature_overlapped(feature, features_intervals, promoter_length):
                     continue
 
