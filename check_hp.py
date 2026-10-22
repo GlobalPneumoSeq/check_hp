@@ -12,13 +12,14 @@ from intervaltree import IntervalTree
 
 
 def main(gff_path, promoter_length, repeats):
+    bases = ("A", "T", "C", "G")
+    counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
+
+    db = gffutils.create_db(data=gff_path, dbfn=":memory:")
+
     with tempfile.TemporaryDirectory() as tmpdir:
         fasta_path = str(Path(tmpdir) / "tmp.fasta")
         fasta = extract_fasta(gff_path, fasta_path)
-        db = gffutils.create_db(data=gff_path, dbfn=":memory:")
-
-        bases = ("A", "T", "C", "G")
-        counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
 
         for contig in natsort.natsorted(db.seqids()):
             contig_details = get_contig_details(db, contig, fasta, featuretype="CDS")
@@ -40,7 +41,7 @@ def main(gff_path, promoter_length, repeats):
                 for base in bases:
                     counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
        
-        print(counter)
+    print(counter)
 
 
 # Extract FASTA from GFF3
