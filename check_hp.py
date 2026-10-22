@@ -14,10 +14,8 @@ from intervaltree import IntervalTree
 def main(gff_path, promoter_length, repeats):
     with tempfile.TemporaryDirectory() as tmpdir:
         fasta_path = str(Path(tmpdir) / "tmp.fasta")
-        db_path = str(Path(tmpdir) / "tmp.gffutils_db")
-
         fasta = extract_fasta(gff_path, fasta_path)
-        db = gffutils.create_db(gff_path, db_path)
+        db = gffutils.create_db(data=gff_path, dbfn=":memory:")
 
         bases = ("A", "T", "C", "G")
         counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
