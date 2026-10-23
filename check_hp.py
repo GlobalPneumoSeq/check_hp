@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
-from pathlib import Path
 import os
 import re
-import natsort
+import tempfile
 import gffutils
 import pyfaidx
-import tempfile
 from intervaltree import IntervalTree
 
 
@@ -15,15 +13,11 @@ def main(gff_path, promoter_length, repeats):
     bases = ("A", "T", "C", "G")
     counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
 
-    db = gffutils.create_db(data=gff_path, dbfn=":memory:")
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
+        all_contigs_details = get_all_contigs_details(gff_path, workdir, featuretype="CDS")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        fasta_path = str(Path(tmpdir) / "tmp.fasta")
-        fasta = extract_fasta(gff_path, fasta_path)
-
-        for contig in natsort.natsorted(db.seqids()):
-            contig_details = get_contig_details(db, contig, fasta, featuretype="CDS")
-
+        for contig in all_contigs_details:
+            contig_details = all_contigs_details[contig]
             # Create an interval tree for the features in the contig
             # feature.end + 1 as IntervalTree is non-inclusive of the upper limit
             features_intervals = IntervalTree.from_tuples([(feature.start, feature.end + 1) for feature in contig_details["features"]])
@@ -42,6 +36,22 @@ def main(gff_path, promoter_length, repeats):
                     counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
        
     print(counter)
+
+
+# Save details of all contigs from the GFF3 file to a nested dictionary
+def get_all_contigs_details(gff_path, workdir, featuretype):
+    contigs_details = {}
+
+    db = gffutils.create_db(data=gff_path, dbfn=":memory:")
+
+    with tempfile.NamedTemporaryFile(mode="w+t", dir=workdir, delete=False) as tmp_fasta_file:
+        fasta = extract_fasta(gff_path, tmp_fasta_file.name)
+        tmp_fasta_file.close()
+
+        for contig in db.seqids():
+            contigs_details[contig] = get_contig_details(db, contig, fasta, featuretype)
+
+    return contigs_details
 
 
 # Extract FASTA from GFF3
