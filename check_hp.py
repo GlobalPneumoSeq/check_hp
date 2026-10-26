@@ -4,14 +4,17 @@ import argparse
 import os
 import re
 import tempfile
+import pandas as pd
 import gffutils
 import pyfaidx
 from intervaltree import IntervalTree
+import natsort
 
 
 def main(gff_path, promoter_length, repeats):
     bases = ("A", "T", "C", "G")
-    counter = {"promoter": 0, **{f"poly{base}": 0 for base in bases}}
+
+    promoter_summary_data = []
 
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
         all_contigs_details = get_all_contigs_details(gff_path, workdir, featuretype="CDS")
@@ -31,11 +34,24 @@ def main(gff_path, promoter_length, repeats):
                 if not promoter_within_contig(feature, contig_details, promoter_length):
                     continue
 
-                counter["promoter"] += 1
+                summary_row_data = {
+                    "contig": contig,
+                    "id": feature.id,
+                    "strand": feature.strand,
+                    "start": feature.start,
+                    "end": feature.end,
+                    "gene": feature.attributes.get("gene", [""])[0],
+                    "protein": feature.attributes.get("Name", [""])[0]
+                }
+
                 for base in bases:
-                    counter[f"poly{base}"] += get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
-       
-    print(counter)
+                    summary_row_data[f"poly{base}"] = get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
+
+                promoter_summary_data.append(summary_row_data)
+
+    df_promoter_summary = pd.DataFrame(promoter_summary_data).sort_values(by=["contig", "id"], key=natsort.natsort_keygen())
+
+    df_promoter_summary.to_csv("promoter_summary.csv", index=False)
 
 
 # Save details of all contigs from the GFF3 file to a nested dictionary
