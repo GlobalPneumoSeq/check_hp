@@ -15,6 +15,7 @@ def main(gff_path, promoter_length, repeats):
     bases = ("A", "T", "C", "G")
 
     promoters_summary_data = []
+    homopolymers_details_data = []
 
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
         all_contigs_details = get_all_contigs_details(gff_path, workdir, featuretype="CDS")
@@ -34,26 +35,40 @@ def main(gff_path, promoter_length, repeats):
                 if not promoter_within_contig(feature, contig_details, promoter_length):
                     continue
 
-                row_template = {
+                row_data_template = {
                     "contig": contig,
-                    "id": feature.id,
+                    "feature_id": feature.id,
                     "strand": feature.strand,
-                    "start": feature.start,
-                    "end": feature.end,
+                    "feature_start_pos": feature.start,
+                    "feature_end_pos": feature.end,
                     "gene": feature.attributes.get("gene", [""])[0],
                     "protein": feature.attributes.get("Name", [""])[0]
                 }
 
-                promoters_summary_row_data = row_template.copy()
+                promoters_summary_row_data = row_data_template.copy()
 
                 for base in bases:
-                    promoters_summary_row_data[f"poly{base}"] = get_homopolymer_count(feature, contig_details["fasta"], promoter_length, base, repeats)
+                    homopolymers = get_homopolymers(feature, contig_details["fasta"], promoter_length, base, repeats)
+
+                    promoters_summary_row_data[f"poly{base}"] = len(homopolymers)
+
+                    for homopolymer in homopolymers:
+                        homopolymers_details_row_data = row_data_template.copy()
+
+                        homopolymers_details_row_data["repeated_base"] = base
+                        homopolymers_details_row_data.update(homopolymer)
+
+                        homopolymers_details_data.append(homopolymers_details_row_data)
 
                 promoters_summary_data.append(promoters_summary_row_data)
 
-    df_promoters_summary = pd.DataFrame(promoters_summary_data).sort_values(by=["contig", "id"], key=natsort.natsort_keygen())
-
+    promoters_summary_columns = ["contig", "feature_id", "strand", "feature_start_pos", "feature_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
+    df_promoters_summary = pd.DataFrame(promoters_summary_data, columns=promoters_summary_columns).sort_values(by=["contig", "feature_id"], key=natsort.natsort_keygen())
     df_promoters_summary.to_csv("promoters_summary.csv", index=False)
+
+    homopolymers_details_columns = ["contig", "feature_id", "strand", "feature_start_pos", "feature_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
+    df_homopolymers_details = pd.DataFrame(homopolymers_details_data, columns=homopolymers_details_columns).sort_values(by=["contig", "feature_id"], key=natsort.natsort_keygen())
+    df_homopolymers_details.to_csv("homopolymers_details.csv", index=False)
 
 
 # Save details of all contigs from the GFF3 file to a nested dictionary
@@ -128,14 +143,43 @@ def promoter_within_contig(feature, contig_details, promoter_length):
         return feature.end + promoter_length <= contig_details["end"]
 
 
-# Get the homopolymer count of the specific base within the promoter
-def get_homopolymer_count(feature, contig_fasta, promoter_length, base, repeats):
+# Get details of homopolymers of a specific base within the promoter of a feature
+def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
     match_pattern = re.compile(rf"{base}{{{repeats},}}")
+
     if feature.strand == "+":
-        promoter_sequence = contig_fasta[(feature.start - promoter_length - 1) : (feature.start - 1)]
+        promoter_start_index = feature.start - promoter_length - 1
+        promoter_end_index = feature.start - 1
+
+        promoter_sequence = contig_fasta[promoter_start_index:promoter_end_index]
+
+        matches = [
+            {
+                "repeats": len(match.group()),
+                "repeat_start_pos": match.start() + promoter_start_index + 1,
+                "repeat_end_pos": (repeat_end_pos := match.end() + promoter_start_index),
+                "distance_from_cds": feature.start - repeat_end_pos
+            }
+            for match in match_pattern.finditer(str(promoter_sequence).upper())
+        ]
+
     elif feature.strand == "-":
-        promoter_sequence = contig_fasta[feature.end : (feature.end + promoter_length)].reverse.complement
-    return len(match_pattern.findall(str(promoter_sequence).upper()))
+        promoter_start_index = feature.end
+        promoter_end_index = feature.end + promoter_length
+
+        promoter_sequence = contig_fasta[promoter_start_index:promoter_end_index].reverse.complement
+
+        matches = [
+            {
+                "repeats": len(match.group()),
+                "repeat_start_pos": (repeat_start_pos := promoter_start_index + promoter_length - match.end() + 1),
+                "repeat_end_pos": promoter_start_index + promoter_length - match.start(),
+                "distance_from_cds": repeat_start_pos - feature.end
+            }
+            for match in match_pattern.finditer(str(promoter_sequence).upper())
+        ]
+
+    return matches
 
 
 # Parse arguments
