@@ -12,29 +12,32 @@ import natsort
 
 
 def main(gff_path, promoter_length, repeats):
+    # Nucleotide bases to search for
     bases = ("A", "T", "C", "G")
 
+    # To store promoters summary and homopolyers details
     promoters_summary_data = []
     homopolymers_details_data = []
 
+    # Work within a temporary directory to handle extracted FASTA file and associated faidx index
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
         all_contigs_details = get_all_contigs_details(gff_path, workdir, featuretype="CDS")
 
         for contig in all_contigs_details:
             contig_details = all_contigs_details[contig]
-            # Create an interval tree for the features in the contig
-            # feature.end + 1 as IntervalTree is non-inclusive of the upper limit
-            features_intervals = IntervalTree.from_tuples([(feature.start, feature.end + 1) for feature in contig_details["features"]])
+
+            features_intervaltree = get_features_intervaltree(contig_details["features"])
 
             for feature in contig_details["features"]:
                 validate_feature_strand(feature, contig)
 
-                if promoter_feature_overlapped(feature, features_intervals, promoter_length):
+                if promoter_feature_overlapped(feature, features_intervaltree, promoter_length):
                     continue
 
                 if not promoter_within_contig(feature, contig_details, promoter_length):
                     continue
 
+                # Shared row data template for both promoters summary and homopolymers details
                 row_data_template = {
                     "contig": contig,
                     "strand": feature.strand,
@@ -45,7 +48,8 @@ def main(gff_path, promoter_length, repeats):
                     "protein": feature.attributes.get("Name", [""])[0]
                 }
 
-                promoters_summary_row_data = row_data_template.copy()
+                # To collect the homopolymer counts for each base in the promoter region
+                promoters_summary_row_data = {}
 
                 for base in bases:
                     homopolymers = get_homopolymers(feature, contig_details["fasta"], promoter_length, base, repeats)
@@ -53,22 +57,11 @@ def main(gff_path, promoter_length, repeats):
                     promoters_summary_row_data[f"poly{base}"] = len(homopolymers)
 
                     for homopolymer in homopolymers:
-                        homopolymers_details_row_data = row_data_template.copy()
+                        homopolymers_details_data.append({**row_data_template, "repeated_base": base, **homopolymer})
 
-                        homopolymers_details_row_data["repeated_base"] = base
-                        homopolymers_details_row_data.update(homopolymer)
+                promoters_summary_data.append({**row_data_template, **promoters_summary_row_data})
 
-                        homopolymers_details_data.append(homopolymers_details_row_data)
-
-                promoters_summary_data.append(promoters_summary_row_data)
-
-    promoters_summary_columns = ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
-    df_promoters_summary = pd.DataFrame(promoters_summary_data, columns=promoters_summary_columns).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
-    df_promoters_summary.to_csv("promoters_summary.csv", index=False)
-
-    homopolymers_details_columns = ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
-    df_homopolymers_details = pd.DataFrame(homopolymers_details_data, columns=homopolymers_details_columns).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
-    df_homopolymers_details.to_csv("homopolymers_details.csv", index=False)
+    save_results(promoters_summary_data, homopolymers_details_data)
 
 
 # Save details of all contigs from the GFF3 file to a nested dictionary
@@ -87,17 +80,24 @@ def get_all_contigs_details(gff_path, workdir, featuretype):
     return contigs_details
 
 
-# Extract FASTA from GFF3
+# Extract FASTA from the GFF3 file 
 def extract_fasta(gff_path, fasta_path):
     with open(gff_path, "r") as gff_file, open(fasta_path, "w") as fasta_file:
         reached_fasta = False
+       
         for line in gff_file:
+            if line.strip() == "##FASTA":
+                if reached_fasta:
+                    raise ValueError("Multiple ##FASTA sections found in the provided GFF3 file")
+                reached_fasta = True
+                continue
+            
             if reached_fasta:
                 fasta_file.write(line)
-            if line.strip() == "##FASTA":
-                reached_fasta = True
+
         if not reached_fasta:
             raise ValueError("No ##FASTA section found in the provided GFF3 file")
+    
     return pyfaidx.Fasta(fasta_path)
 
 
@@ -117,10 +117,23 @@ def get_contig_details(db, contig, fasta, featuretype):
     return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": features}
 
 
-# Validate value of strand of a feature
+# Create an interval tree for the features
+def get_features_intervaltree(features):
+    intervals = []
+
+    for feature in features:
+        # interval end is feature.end + 1 as IntervalTree is non-inclusive of the upper limit
+        intervals.append((feature.start, feature.end + 1))
+    
+    return IntervalTree.from_tuples(intervals)
+
+
+# Validate strand value of a feature
 def validate_feature_strand(feature, contig):
-    if feature.strand not in ("+", "-"):
-        raise ValueError(f"Malformed GFF3: expected strand value of + or -, got {feature.strand} for feature {feature.id} on contig {contig}")
+    if feature.strand in ("+", "-"):
+        return
+    
+    raise ValueError(f"Malformed GFF3: expected strand value of + or -, got {feature.strand} for feature {feature.id} on contig {contig}")
 
 
 # Check if the promoter region overlaps with any features
@@ -180,6 +193,27 @@ def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
         ]
 
     return matches
+
+
+# Save results to CSV files
+# Rows sorted by contig then cds_id using natural sorting
+def save_results(promoters_summary_data, homopolymers_details_data):
+    results = [
+        {   
+            "data": promoters_summary_data,
+            "filename": "promoters_summary.csv",  
+            "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
+        },
+        {
+            "data": homopolymers_details_data,
+            "filename": "homopolymers_details.csv",
+            "columns": ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
+        }
+    ]
+
+    for result in results:
+        df = pd.DataFrame(result["data"], columns=result["columns"]).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
+        df.to_csv(result["filename"], index=False)
 
 
 # Parse arguments
