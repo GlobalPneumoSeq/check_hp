@@ -37,10 +37,10 @@ def main(gff_path, promoter_length, repeats):
 
                 row_data_template = {
                     "contig": contig,
-                    "feature_id": feature.id,
                     "strand": feature.strand,
-                    "feature_start_pos": feature.start,
-                    "feature_end_pos": feature.end,
+                    "cds_id": feature.id,
+                    "cds_start_pos": feature.start,
+                    "cds_end_pos": feature.end,
                     "gene": feature.attributes.get("gene", [""])[0],
                     "protein": feature.attributes.get("Name", [""])[0]
                 }
@@ -62,12 +62,12 @@ def main(gff_path, promoter_length, repeats):
 
                 promoters_summary_data.append(promoters_summary_row_data)
 
-    promoters_summary_columns = ["contig", "feature_id", "strand", "feature_start_pos", "feature_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
-    df_promoters_summary = pd.DataFrame(promoters_summary_data, columns=promoters_summary_columns).sort_values(by=["contig", "feature_id"], key=natsort.natsort_keygen())
+    promoters_summary_columns = ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
+    df_promoters_summary = pd.DataFrame(promoters_summary_data, columns=promoters_summary_columns).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
     df_promoters_summary.to_csv("promoters_summary.csv", index=False)
 
-    homopolymers_details_columns = ["contig", "feature_id", "strand", "feature_start_pos", "feature_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
-    df_homopolymers_details = pd.DataFrame(homopolymers_details_data, columns=homopolymers_details_columns).sort_values(by=["contig", "feature_id"], key=natsort.natsort_keygen())
+    homopolymers_details_columns = ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
+    df_homopolymers_details = pd.DataFrame(homopolymers_details_data, columns=homopolymers_details_columns).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
     df_homopolymers_details.to_csv("homopolymers_details.csv", index=False)
 
 
