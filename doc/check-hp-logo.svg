@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="132" viewBox="0 0 500 132" role="img" aria-labelledby="title description">
+  <title id="title">Check HP</title>
+  <desc id="description">A segmented game-style status bar above a repeated nucleotide sequence, beside the Check HP wordmark.</desc>
+  <g transform="translate(10 10)">
+    <rect width="112" height="112" rx="28" fill="#102A43"/>
+    <rect x="15" y="25" width="82" height="29" rx="7" fill="#FFFFFF"/>
+    <rect x="19" y="29" width="74" height="21" rx="4" fill="#E45757"/>
+    <path d="M23 29h55a4 4 0 0 1 4 4v13a4 4 0 0 1-4 4H23a4 4 0 0 1-4-4V33a4 4 0 0 1 4-4Z" fill="#55D6BE"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="800" text-anchor="middle">
+      <text x="16" y="91" fill="#486581">T</text>
+      <text x="25" y="91" fill="#55D6BE">A</text>
+      <text x="34" y="91" fill="#55D6BE">A</text>
+      <text x="43" y="91" fill="#55D6BE">A</text>
+      <text x="52" y="91" fill="#55D6BE">A</text>
+      <text x="61" y="91" fill="#55D6BE">A</text>
+      <text x="70" y="91" fill="#55D6BE">A</text>
+      <text x="79" y="91" fill="#55D6BE">A</text>
+      <text x="88" y="91" fill="#55D6BE">A</text>
+      <text x="97" y="91" fill="#486581">G</text>
+    </g>
+  </g>
+  <text x="146" y="72" fill="#102A43" font-family="Inter, Helvetica, Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="-1.5">Check HP</text>
+  <text x="149" y="101" fill="#486581" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" letter-spacing="2.1">HOMOPOLYMER SCANNER</text>
+</svg>
