@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import os
 import re
@@ -15,7 +14,7 @@ def main(gff_path, promoter_length, repeats):
     # Nucleotide bases to search for
     bases = ("A", "T", "C", "G")
 
-    # To store promoters summary and homopolyers details
+    # To store promoters summary and homopolymers details
     promoters_summary_data = []
     homopolymers_details_data = []
 
@@ -80,24 +79,24 @@ def get_all_contigs_details(gff_path, workdir, featuretype):
     return contigs_details
 
 
-# Extract FASTA from the GFF3 file 
+# Extract FASTA from the GFF3 file
 def extract_fasta(gff_path, fasta_path):
     with open(gff_path, "r") as gff_file, open(fasta_path, "w") as fasta_file:
         reached_fasta = False
-       
+
         for line in gff_file:
             if line.strip() == "##FASTA":
                 if reached_fasta:
                     raise ValueError("Multiple ##FASTA sections found in the provided GFF3 file")
                 reached_fasta = True
                 continue
-            
+
             if reached_fasta:
                 fasta_file.write(line)
 
         if not reached_fasta:
             raise ValueError("No ##FASTA section found in the provided GFF3 file")
-    
+
     return pyfaidx.Fasta(fasta_path)
 
 
@@ -111,9 +110,9 @@ def get_contig_details(db, contig, fasta, featuretype):
     except gffutils.exceptions.FeatureNotFoundError:
         contig_start = 1
         contig_end = len(contig_fasta)
-    
+
     features = list(db.region(seqid=contig, featuretype=featuretype))
-    
+
     return {"fasta": contig_fasta, "start": contig_start, "end": contig_end, "features": features}
 
 
@@ -124,7 +123,7 @@ def get_features_intervaltree(features):
     for feature in features:
         # interval end is feature.end + 1 as IntervalTree is non-inclusive of the upper limit
         intervals.append((feature.start, feature.end + 1))
-    
+
     return IntervalTree.from_tuples(intervals)
 
 
@@ -132,7 +131,7 @@ def get_features_intervaltree(features):
 def validate_feature_strand(feature, contig):
     if feature.strand in ("+", "-"):
         return
-    
+
     raise ValueError(f"Malformed GFF3: expected strand value of + or -, got {feature.strand} for feature {feature.id} on contig {contig}")
 
 
@@ -195,14 +194,13 @@ def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
     return matches
 
 
-# Save results to CSV files
-# Rows sorted by contig then cds_id using natural sorting
+# Save results to CSV files with rows sorted
 def save_results(promoters_summary_data, homopolymers_details_data):
     results = [
-        {   
+        {
             "data": promoters_summary_data,
-            "filename": "promoters_summary.csv",  
-            "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG" ]
+            "filename": "promoters_summary.csv",
+            "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG"]
         },
         {
             "data": homopolymers_details_data,
@@ -220,22 +218,22 @@ def save_results(promoters_summary_data, homopolymers_details_data):
 def parse_arguments():
     def check_valid_gff3(gff_path):
         if not os.path.isfile(gff_path):
-            raise argparse.ArgumentTypeError(f'{gff_path} does not exist.')
-        
+            raise argparse.ArgumentTypeError(f"{gff_path} does not exist.")
+
         with open(gff_path, "r") as gff_file:
             if gff_file.readline().strip() != "##gff-version 3":
-                raise argparse.ArgumentTypeError(f'{gff_path} is not a valid GFF3 file.')
-            
+                raise argparse.ArgumentTypeError(f"{gff_path} is not a valid GFF3 file.")
+
         return gff_path
 
     def check_int_more_than_one(val):
         try:
             val_int = int(val)
             if val_int <= 1:
-                raise argparse.ArgumentTypeError(f'{val} is not a valid integer greater than 1.')
+                raise argparse.ArgumentTypeError(f"{val} is not a valid integer greater than 1.")
             return val_int
         except ValueError:
-            raise argparse.ArgumentTypeError(f'{val} is not a valid integer.')
+            raise argparse.ArgumentTypeError(f"{val} is not a valid integer.")
 
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
