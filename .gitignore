@@ -6,6 +6,8 @@ __pycache__
 
 # pytest files
 .coverage
+.pytest_cache/
+htmlcov/
 
 # Test files
 *.gff3
@@ -15,6 +17,3 @@ __pycache__
 *.fai
 *.fasta
 *.csv
-
-# Temporary directory for development
-dev_temp
