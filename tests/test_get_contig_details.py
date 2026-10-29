@@ -16,6 +16,7 @@ class MockFastaSeq:
     def __str__(self):
         return self.seq
 
+
 class MockFasta:
     def __init__(self, sequences):
         self.sequences = sequences
@@ -23,12 +24,14 @@ class MockFasta:
     def __getitem__(self, contig):
         return MockFastaSeq(self.sequences[contig])
 
+
 class MockFeature:
     def __init__(self, start, end, strand, featuretype):
         self.start = start
         self.end = end
         self.strand = strand
         self.featuretype = featuretype
+
 
 class MockDB:
     def __init__(self, contig_features=None, contig_bounds=None):
@@ -71,6 +74,7 @@ def test_get_contig_details_with_contig_in_db():
     assert all(feature.featuretype == "CDS" for feature in result["features"])
     assert str(result["fasta"]) == "ATGC" * 25
 
+
 def test_get_contig_details_without_contig_in_db():
     fasta = MockFasta({"contig1": "ATGC" * 25})
 
@@ -82,6 +86,7 @@ def test_get_contig_details_without_contig_in_db():
 
     assert result["start"] == 1
     assert result["end"] == 100
+
 
 def test_get_contig_details_returns_empty_feature_list_if_no_matching_featuretype():
     fasta = MockFasta({"contig1": "ATGC" * 25})
