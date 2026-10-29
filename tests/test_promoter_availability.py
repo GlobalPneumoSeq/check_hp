@@ -1,7 +1,7 @@
 from intervaltree import IntervalTree
 import pytest
 
-from check_hp import promoter_feature_overlapped, promoter_within_contig, validate_feature_strand
+from check_hp import promoter_feature_overlapped, promoter_within_contig, validate_feature_strand, get_features_intervaltree
 
 
 # Mock Classes
@@ -12,13 +12,6 @@ class MockFeature:
         self.end = end
         self.strand = strand
         self.id = feature_id
-
-
-def make_features_intervals(*features):
-    # GFF3 coordinates are inclusive; IntervalTree intervals are half-open.
-    return IntervalTree.from_tuples(
-        (feature.start, feature.end + 1) for feature in features
-    )
 
 
 # Tests
@@ -56,7 +49,7 @@ def make_features_intervals(*features):
     ],
 )
 def test_promoter_feature_overlapped(testing_feature, blocking_feature, expected):
-    features_intervals = make_features_intervals(testing_feature, blocking_feature)
+    features_intervals = get_features_intervaltree([testing_feature, blocking_feature])
     assert promoter_feature_overlapped(testing_feature, features_intervals, promoter_length=100) is expected
 
 
