@@ -170,7 +170,7 @@ def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
                 "repeats": len(match.group()),
                 "repeat_start_pos": match.start() + promoter_start_index + 1,
                 "repeat_end_pos": (repeat_end_pos := match.end() + promoter_start_index),
-                "distance_from_cds": feature.start - repeat_end_pos
+                "distance_from_cds": feature.start - repeat_end_pos - 1
             }
             for match in match_pattern.finditer(str(promoter_sequence).upper())
         ]
@@ -186,7 +186,7 @@ def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
                 "repeats": len(match.group()),
                 "repeat_start_pos": (repeat_start_pos := promoter_start_index + promoter_length - match.end() + 1),
                 "repeat_end_pos": promoter_start_index + promoter_length - match.start(),
-                "distance_from_cds": repeat_start_pos - feature.end
+                "distance_from_cds": repeat_start_pos - feature.end - 1
             }
             for match in match_pattern.finditer(str(promoter_sequence).upper())
         ]

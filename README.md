@@ -63,7 +63,7 @@ The script writes two CSV files to the current working directory (replacing file
     contig_21,  +     ,  LCMFBM_01860,  21090        ,  21914      ,  ybbA,  Esterase             ,  0    ,  1    ,  0    ,  0 
     ```
 - `homopolymers_details.csv` contains one row for each valid homopolymer. Each row includes CDS information, the base of the homopolymer (`repeated_base`), homopolymer length (`repeats`), start position of the homopolymer (`repeat_start_pos`), end position of the homopolymer (`repeat_end_pos`), and distance of the homopolymer from the CDS (`distance_from_cds`).
-    - `distance_from_cds` is the number of bases between the homopolymer and the CDS boundary in the direction of transcription. On a `+` strand, it is calculated from the end of homopolymer to the CDS start; on a `-` strand, from the start of homopolymer to the CDS end. Therefore, an immediately adjacent repeat has a distance of `1` base.
+    - `distance_from_cds` is the number of bases between the homopolymer and the CDS in the direction of transcription. On a `+` strand, it is calculated from the homopolymer end to the CDS start; on a `-` strand, from the homopolymer start to the CDS end. An immediately adjacent repeat therefore has a distance of `0`.
     - `repeated_base` would be the base on the complemented sequence for promoters on the `-` strand.
     ##### Example (columns aligned for readability)
     ```csv
