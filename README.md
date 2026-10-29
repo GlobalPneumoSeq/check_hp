@@ -9,7 +9,7 @@ In Check HP, a promoter is defined as `100` bases (configurable) immediately ups
 - Do not overlap with another CDS on either strands
 - Full length is completely within the contig boundaries
 
-Homopolymeric nucleotide runs are searched within valid promoters, where it is performed on the promoter strand (i.e. for promoters on `-` strand, the reversed and complemented sequences are searched). Only homopolymers that meet the following criteron are considered as valid:
+Homopolymeric nucleotide runs are searched within valid promoters, where it is performed on the promoter strand (i.e. for promoters on `-` strand, the reversed and complemented sequences are searched). Only homopolymers that meet the following criterion are considered as valid:
 - Have at least `8` continuously repeated bases (configurable)
 
 ## Requirements
