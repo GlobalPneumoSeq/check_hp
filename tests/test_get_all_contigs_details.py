@@ -4,7 +4,7 @@ from check_hp import get_all_contigs_details
 # Tests
 
 def test_get_all_contigs_details_loads_gff_features_and_fasta(tmp_path):
-    gff_path = tmp_path / "annotation.gff3"
+    gff_path = tmp_path / "test.gff3"
     gff_path.write_text(
         "##gff-version 3\n"
         "##feature-ontology https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/v3.1/so.obo\n"
