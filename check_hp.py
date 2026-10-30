@@ -212,17 +212,19 @@ def save_results(promoters_summary_data, homopolymers_details_data, results_dir)
         {
             "data": promoters_summary_data,
             "filename": "promoters.csv",
-            "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG"]
+            "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG"],
+            "sorted_by": ["contig", "cds_id"]
         },
         {
             "data": homopolymers_details_data,
             "filename": "homopolymers.csv",
-            "columns": ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
+            "columns": ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"],
+            "sorted_by": ["contig", "cds_id", "repeated_base", "distance_from_cds"]
         }
     ]
 
     for result in results:
-        df = pd.DataFrame(result["data"], columns=result["columns"]).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
+        df = pd.DataFrame(result["data"], columns=result["columns"]).sort_values(by=result["sorted_by"], key=natsort.natsort_keygen())
         df.to_csv(results_dir / result["filename"], index=False)
 
 
