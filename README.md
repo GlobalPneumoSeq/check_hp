@@ -2,7 +2,7 @@
 
 ![Check HP logo](doc/check-hp-logo.svg)
 
-Check HP scans promoter regions upstream of coding DNA sequences (CDS) in a Bakta-generated annotation file (`.gff3`) for homopolymeric nucleotide runs (e.g. `AAAAAAAA`). It outputs a report on individual discovered promoters and count of homopolymers in each (`promoters.csv`) and a report on individual discovered homopolymers (`homopolymers.csv`).
+Check HP scans promoter regions upstream of coding DNA sequences (CDS) in a Bakta-generated annotation file (`.gff3`) for homopolymeric nucleotide runs (e.g. `AAAAAAAA`). It outputs a report listing discovered promoters and homopolymer counts for each (`promoters.csv`) and a report listing discovered homopolymers and their details (`homopolymers.csv`).
 
 In Check HP, a promoter is defined as `100` bases (configurable) immediately upstream of a CDS, with direction based on its strand (i.e. towards the beginning for `+` strand, and towards the end for `-` strand). Only promoters that meet all the following criteria are considered as valid:
 - Upstream of a `CDS` feature in the annotation file
@@ -60,23 +60,26 @@ random_name_results/
 ├── promoters.csv
 └── homopolymers.csv
 ```
+> [!NOTE]
+> Positions in both files use the coordinate system of the GFF3 feature records.
 
-- `promoters.csv` contains one row for each valid promoter. Each row includes CDS information, plus counts of A, T, C, and G homopolymers (`polyA`, `polyT`, `polyC`, `polyG`).
-
+- `promoters.csv` contains one row for each valid promoter.
+    - Each row includes CDS information, plus counts of A, T, C, and G homopolymers (`polyA`, `polyT`, `polyC`, `polyG`).
+    - Rows are sorted naturally by `contig` and then `cds_id`.
     ##### Example (columns aligned for readability)
     ```csv
     contig   ,  strand,  cds_id      ,  cds_start_pos,  cds_end_pos,  gene,  protein              ,  polyA,  polyT,  polyC,  polyG
     contig_14,  -     ,  LCMFBM_01515,  41380        ,  42438      ,  tdh ,  Alcohol dehydrogenase,  0    ,  0    ,  0    ,  0    
     contig_21,  +     ,  LCMFBM_01860,  21090        ,  21914      ,  ybbA,  Esterase             ,  0    ,  1    ,  0    ,  0 
     ```
-- `homopolymers.csv` contains one row for each valid homopolymer. Each row includes CDS information, the base of the homopolymer (`repeated_base`), homopolymer length (`repeats`), start position of the homopolymer (`repeat_start_pos`), end position of the homopolymer (`repeat_end_pos`), and distance of the homopolymer from the CDS (`distance_from_cds`).
+- `homopolymers.csv` contains one row for each valid homopolymer.
+    - Each row includes CDS information, the base of the homopolymer (`repeated_base`), homopolymer length (`repeats`), start position of the homopolymer (`repeat_start_pos`), end position of the homopolymer (`repeat_end_pos`), and distance of the homopolymer from the CDS (`distance_from_cds`).
+    - Rows are sorted naturally by `contig`, `cds_id`, `repeated_base`, and then `distance_from_cds`.
     - `distance_from_cds` is the number of bases between the homopolymer and the CDS in the direction of transcription. On a `+` strand, it is calculated from the homopolymer end to the CDS start; on a `-` strand, from the homopolymer start to the CDS end. An immediately adjacent repeat therefore has a distance of `0`.
-    - `repeated_base` would be the base on the complemented sequence for promoters on the `-` strand.
+    - For CDS on `-` strand, `repeated_base` is reported on that strand, complementary to the reference sequence.
     ##### Example (columns aligned for readability)
     ```csv
     contig   ,  strand,  cds_id      ,  cds_start_pos,  cds_end_pos,  gene,  protein                   ,  repeated_base,  repeats,  repeat_start_pos,  repeat_end_pos,  distance_from_cds
     contig_1 ,  -     ,  LCMFBM_00268,  245006       ,  246007     ,  purR,  Catabolite control protein,  A            ,  8      ,  246055          ,  246062        ,  48               
     contig_21,  +     ,  LCMFBM_01860,  21090        ,  21914      ,  ybbA,  Esterase                  ,  T            ,  8      ,  20999           ,  21006         ,  84               
     ```
-
-Rows in both files are sorted by `contig` and then `cds_id` using natural sorting. Positions are reported using the coordinates derived from the GFF3 feature records. 
