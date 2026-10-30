@@ -14,7 +14,7 @@ def test_get_all_contigs_details_loads_gff_features_and_fasta(tmp_path):
         "# Database: v6.0, full\n"
         "# DOI: 10.1099/mgen.0.000685\n"
         "# URL: github.com/oschwengers/bakta\n"
-        "#sequence-region contig_1 1 1000\n"
+        "##sequence-region contig_1 1 5\n"
         "contig_1	Bakta	region	1	5	.	+	.	ID=contig_1;Name=contig_1\n"
         "contig_1	Bakta	CDS	2	3	.	+	.	ID=contig_1_feature_1_id;Name=contig_1_feature_1_name\n"
         "contig_2	Bakta	region	1	4	.	+	.	ID=contig_2;Name=contig_2\n"
