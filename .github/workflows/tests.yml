@@ -1,0 +1,24 @@
+name: Unit and Integration Testing
+
+on: 
+  push
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Prepare Conda environment
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          environment-file: environment.yml
+          activate-environment: check_hp
+          auto-activate: false
+
+      - name: Run test suite
+        run: python -m pytest -vv
