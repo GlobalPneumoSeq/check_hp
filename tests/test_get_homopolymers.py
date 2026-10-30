@@ -79,8 +79,8 @@ def test_get_homopolymers_is_case_insensitive():
     }]
 
 
-def test_get_homopolymers_finds_multiple_runs_at_promoter_edges():
-    # Positive strand, promoter occupies positions 11 - 20, 2 four-base runs touch each edge of that promoter
+def test_get_homopolymers_finds_multiple_runs_at_promoter_edges_on_positive_strand():
+    # Positive strand, promoter occupies positions 11 - 20, a four-base and a five-base runs touch each edge of that promoter
     sequence = Sequence("ATCGATCGATAAAATAAAAACGATCGATCG")
 
     result = get_homopolymers(MockFeature(21, 30, "+"), sequence, 10, "A", 4)
@@ -97,5 +97,27 @@ def test_get_homopolymers_finds_multiple_runs_at_promoter_edges():
             "repeat_start_pos": 16,
             "repeat_end_pos": 20,
             "distance_from_cds": 0,
-        }
+        },
+    ]
+
+
+def test_get_homopolymers_finds_multiple_runs_at_promoter_edges_on_minus_strand():
+    # Negative strand, promoter occupies positions 21 - 30, 2 four-base runs touch each edge of that promoter, AAAA on the sequence becomes TTTT
+    sequence = Sequence("CGATCGATCGATCGATCGATAAAATTAAAA")
+
+    result = get_homopolymers(MockFeature(1, 20, "-"), sequence, 10, "T", 4)
+
+    assert result == [
+        {
+            "repeats": 4,
+            "repeat_start_pos": 27,
+            "repeat_end_pos": 30,
+            "distance_from_cds": 6
+        },
+        {
+            "repeats": 4,
+            "repeat_start_pos": 21,
+            "repeat_end_pos": 24,
+            "distance_from_cds": 0
+        },
     ]
