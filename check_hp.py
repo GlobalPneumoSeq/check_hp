@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+from pathlib import Path
 import re
 import tempfile
 import pandas as pd
@@ -60,7 +61,8 @@ def main(gff_path, promoter_length, repeats):
 
                 promoters_summary_data.append({**row_data_template, **promoters_summary_row_data})
 
-    save_results(promoters_summary_data, homopolymers_details_data)
+    results_dir = get_results_dir(gff_path)
+    save_results(promoters_summary_data, homopolymers_details_data, results_dir)
 
 
 # Save details of all contigs from the GFF3 file to a nested dictionary
@@ -194,24 +196,34 @@ def get_homopolymers(feature, contig_fasta, promoter_length, base, repeats):
     return matches
 
 
+# Create and return results directory based on the name of the GFF3 file
+def get_results_dir(gff_path):
+    filename_no_extension = Path(gff_path).stem
+
+    results_dir = Path(f"{filename_no_extension}_results")
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    return results_dir
+
+
 # Save results to CSV files with rows sorted
-def save_results(promoters_summary_data, homopolymers_details_data):
+def save_results(promoters_summary_data, homopolymers_details_data, results_dir):
     results = [
         {
             "data": promoters_summary_data,
-            "filename": "promoters_summary.csv",
+            "filename": "promoters.csv",
             "columns":  ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "polyA", "polyT", "polyC", "polyG"]
         },
         {
             "data": homopolymers_details_data,
-            "filename": "homopolymers_details.csv",
+            "filename": "homopolymers.csv",
             "columns": ["contig", "strand", "cds_id", "cds_start_pos", "cds_end_pos", "gene", "protein", "repeated_base", "repeats", "repeat_start_pos", "repeat_end_pos", "distance_from_cds"]
         }
     ]
 
     for result in results:
         df = pd.DataFrame(result["data"], columns=result["columns"]).sort_values(by=["contig", "cds_id"], key=natsort.natsort_keygen())
-        df.to_csv(result["filename"], index=False)
+        df.to_csv(results_dir / result["filename"], index=False)
 
 
 # Parse arguments

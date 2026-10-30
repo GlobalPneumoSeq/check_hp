@@ -2,7 +2,7 @@
 
 ![Check HP logo](doc/check-hp-logo.svg)
 
-Check HP scans promoter regions upstream of coding DNA sequences (CDS) in a Bakta-generated annotation file (`.gff3`) for homopolymeric nucleotide runs (e.g. `AAAAAAAA`). It outputs a summary (`promoters_summary.csv`) of all valid promoter regions found and the counts of homopolymers in each region, and a report (`homopolymers_details.csv`) on the details of homopolymers discovered in those promoter regions.
+Check HP scans promoter regions upstream of coding DNA sequences (CDS) in a Bakta-generated annotation file (`.gff3`) for homopolymeric nucleotide runs (e.g. `AAAAAAAA`). It outputs a report on individual discovered promoters and count of homopolymers in each (`promoters.csv`) and a report on individual discovered homopolymers (`homopolymers.csv`).
 
 In Check HP, a promoter is defined as `100` bases (configurable) immediately upstream of a CDS, with direction based on its strand (i.e. towards the beginning for `+` strand, and towards the end for `-` strand). Only promoters that meet all the following criteria are considered as valid:
 - Upstream of a `CDS` feature in the annotation file
@@ -52,9 +52,16 @@ For example, to scan 150-base promoters and report homopolymers of at least 10 b
 
 ## Output
 
-The script writes two CSV files to the current working directory (replacing files with the same names if exist):
+The script creates a `<input_filename_without_suffix>_results` directory in the working directory. For example, `random_name.gff3` produces `random_name_results/`. In that directory, the script outputs `promoters.csv` and `homopolymers.csv`. Files with the same names in that directory are replaced.
+```
+# Example: for random_name.gff3, check_hp.py creates:
 
-- `promoters_summary.csv` contains one row for each valid promoter. Each row includes CDS information, plus counts of A, T, C, and G homopolymers (`polyA`, `polyT`, `polyC`, `polyG`).
+random_name_results/
+├── promoters.csv
+└── homopolymers.csv
+```
+
+- `promoters.csv` contains one row for each valid promoter. Each row includes CDS information, plus counts of A, T, C, and G homopolymers (`polyA`, `polyT`, `polyC`, `polyG`).
 
     ##### Example (columns aligned for readability)
     ```csv
@@ -62,7 +69,7 @@ The script writes two CSV files to the current working directory (replacing file
     contig_14,  -     ,  LCMFBM_01515,  41380        ,  42438      ,  tdh ,  Alcohol dehydrogenase,  0    ,  0    ,  0    ,  0    
     contig_21,  +     ,  LCMFBM_01860,  21090        ,  21914      ,  ybbA,  Esterase             ,  0    ,  1    ,  0    ,  0 
     ```
-- `homopolymers_details.csv` contains one row for each valid homopolymer. Each row includes CDS information, the base of the homopolymer (`repeated_base`), homopolymer length (`repeats`), start position of the homopolymer (`repeat_start_pos`), end position of the homopolymer (`repeat_end_pos`), and distance of the homopolymer from the CDS (`distance_from_cds`).
+- `homopolymers.csv` contains one row for each valid homopolymer. Each row includes CDS information, the base of the homopolymer (`repeated_base`), homopolymer length (`repeats`), start position of the homopolymer (`repeat_start_pos`), end position of the homopolymer (`repeat_end_pos`), and distance of the homopolymer from the CDS (`distance_from_cds`).
     - `distance_from_cds` is the number of bases between the homopolymer and the CDS in the direction of transcription. On a `+` strand, it is calculated from the homopolymer end to the CDS start; on a `-` strand, from the homopolymer start to the CDS end. An immediately adjacent repeat therefore has a distance of `0`.
     - `repeated_base` would be the base on the complemented sequence for promoters on the `-` strand.
     ##### Example (columns aligned for readability)
