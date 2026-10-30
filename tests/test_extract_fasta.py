@@ -7,7 +7,7 @@ from check_hp import extract_fasta
 # Tests
 
 def test_extract_fasta_typical(tmp_path):
-    gff_path = tmp_path / "test.gff"
+    gff_path = tmp_path / "test.gff3"
     fasta_path = tmp_path / "test.fasta"
 
     gff_path.write_text(
@@ -38,7 +38,7 @@ def test_extract_fasta_typical(tmp_path):
 
 
 def test_extract_fasta_no_fasta(tmp_path):
-    gff_path = tmp_path / "test.gff"
+    gff_path = tmp_path / "test.gff3"
     fasta_path = tmp_path / "test.fasta"
 
     gff_path.write_text(
@@ -60,7 +60,7 @@ def test_extract_fasta_no_fasta(tmp_path):
 
 
 def test_extract_fasta_empty_fasta(tmp_path):
-    gff_path = tmp_path / "test.gff"
+    gff_path = tmp_path / "test.gff3"
     fasta_path = tmp_path / "test.fasta"
 
     gff_path.write_text(
@@ -83,7 +83,7 @@ def test_extract_fasta_empty_fasta(tmp_path):
 
 
 def test_extract_fasta_multiple_fasta(tmp_path):
-    gff_path = tmp_path / "test.gff"
+    gff_path = tmp_path / "test.gff3"
     fasta_path = tmp_path / "test.fasta"
 
     gff_path.write_text(
