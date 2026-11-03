@@ -2,7 +2,9 @@
 
 [![CI/CD Tests](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml/badge.svg)](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml)
 
-![Check HP logo](doc/check-hp-logo.svg)
+<p align="center">
+    <img src='doc/check-hp-logo.svg' height="150" />
+</p>
 
 Check HP scans promoter regions upstream of coding DNA sequences (CDS) in a Bakta-generated annotation file (`.gff3`) for homopolymeric nucleotide runs (e.g. `AAAAAAAA`). It outputs a report listing discovered promoters and homopolymer counts for each (`promoters.csv`) and a report listing discovered homopolymers and their details (`homopolymers.csv`).
 
