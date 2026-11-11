@@ -1,3 +1,5 @@
+import pytest
+
 from check_hp import get_homopolymers
 
 
@@ -57,6 +59,27 @@ def test_get_homopolymers_minus_strand_reports_correctly():
         "repeat_start_pos": 21,
         "repeat_end_pos": 24,
         "distance_from_cds": 0,
+    }]
+
+
+@pytest.mark.parametrize(
+    "base, repeat_start, repeat_end",
+    [
+        ("A", 1, 3),
+        ("T", 5, 7),
+        ("C", 9, 11),
+        ("G", 13, 15),
+    ],
+)
+def test_get_homopolymers_detect_all_base_types(base, repeat_start, repeat_end):
+    # Positive strand, promoter occupies positions 1 - 20 and has three-base runs of all base types
+    result = get_homopolymers(MockFeature(21, 30, "+"), Sequence("AAACTTTACCCAGGGACGTAACGTACGTAC"), 20, base, 3)
+
+    assert result == [{
+        "repeats": 3,
+        "repeat_start_pos": repeat_start,
+        "repeat_end_pos": repeat_end,
+        "distance_from_cds": 21 - repeat_end - 1,
     }]
 
 
