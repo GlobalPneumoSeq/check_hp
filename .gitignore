@@ -17,3 +17,6 @@ htmlcov/
 *.fai
 *.fasta
 *.csv
+
+# Always include fixtures for integration test
+!tests/fixtures/*
