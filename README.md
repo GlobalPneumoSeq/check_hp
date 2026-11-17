@@ -1,6 +1,6 @@
 # Check HP - Homopolymer Scanner
 
-[![CI/CD Tests](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml/badge.svg)](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml)
+[![CI tests](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml/badge.svg)](https://github.com/GlobalPneumoSeq/check_hp/actions/workflows/tests.yml)
 
 <p align="center">
     <img src='doc/check-hp-logo.svg' height="150" />
@@ -87,3 +87,15 @@ random_name_results/
     contig_1 ,  -     ,  LCMFBM_00268,  245006       ,  246007     ,  purR,  Catabolite control protein,  A            ,  8      ,  246055          ,  246062        ,  48               
     contig_21,  +     ,  LCMFBM_01860,  21090        ,  21914      ,  ybbA,  Esterase                  ,  T            ,  8      ,  20999           ,  21006         ,  84               
     ```
+
+## Tests
+
+Check HP includes regression tests to check if everything is running as expected. To run the tests:
+
+```bash
+python -m pytest
+```
+
+The test suite includes unit tests and integration tests. [The key integration test](tests/test_simulated_gff3_integration.py) runs Check HP on [ten simulated GFF3 fixtures](tests/fixtures) (generated deterministically by [`tests/generate_simulated_gff3.py`](tests/generate_simulated_gff3.py)) and compares the detected homopolymers with the [expected results](tests/fixtures/expected_homopolymers.csv).
+
+The test suite is automatically run by GitHub Actions on every push to the repository.
